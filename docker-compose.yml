@@ -1,0 +1,41 @@
+version: '3'
+
+networks:
+    db_network:
+
+services:
+    db:
+        image: postgres:12
+        env_file:
+            - ./.db.env
+        volumes:
+            - ./dbdata:/var/lib/postgresql/data
+            - ./data/northwind.sql:/docker-entrypoint-initdb.d/northwind.sql
+        networks:
+            - db_network
+
+    db_worker:
+        image: python:3.9
+        volumes:
+            - ./data/postgres:/data
+            - ./db_worker:/db_worker
+        working_dir: /db_worker
+        env_file:
+            - ./.db.env
+            - ./.env
+        command: bash ./db_worker.sh
+        networks:
+            - db_network
+        depends_on:
+            - db
+
+    csv_worker:
+        image: python:3.9
+        volumes:
+            - ./data/csv:/data
+            - ./data/order_details.csv:/csv_worker/order_details.csv
+            - ./csv_worker:/csv_worker
+        working_dir: /csv_worker
+        env_file:
+            - ./.env
+        command: bash ./csv_worker.sh
