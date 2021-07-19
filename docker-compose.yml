@@ -2,10 +2,16 @@ version: '3'
 
 networks:
     db_network:
+    final_db_network:
+
+volumes:
+    final_db:
 
 services:
     db:
+        container_name: postgres_1
         image: postgres:12
+        restart: always
         env_file:
             - ./.db.env
         volumes:
@@ -14,7 +20,20 @@ services:
         networks:
             - db_network
 
+    final_db:
+        container_name: postgres_2
+        image: postgres:12
+        restart: always
+        env_file:
+            - ./.db.env
+        volumes:
+            - ./final_dbdata:/var/lib/postgresql/data
+            - ./final_db/northwind_final_db.sql:/docker-entrypoint-initdb.d/init.sql
+        networks:
+            - final_db_network
+
     db_worker:
+        container_name: db_worker_1
         image: python:3.9
         volumes:
             - ./data/postgres:/data
@@ -30,6 +49,7 @@ services:
             - db
 
     csv_worker:
+        container_name: csv_worker_1
         image: python:3.9
         volumes:
             - ./data/csv:/data
@@ -39,3 +59,21 @@ services:
         env_file:
             - ./.env
         command: bash ./csv_worker.sh
+
+    final_db_worker:
+        container_name: final_db_worker_1
+        image: python:3.9
+        volumes:
+            - ./data/postgres:/data
+            - ./data/csv:/data/order_details
+            - ./final_db_worker:/final_db_worker
+        working_dir: /final_db_worker
+        env_file:
+            - ./.db.env
+            - ./.env
+        command: bash ./final_db_worker.sh
+        networks:
+            - final_db_network
+        depends_on:
+            - final_db
+

@@ -8,7 +8,7 @@ import time
 
 DATE = os.getenv('DATE')
 DATAPATH = os.getenv('DATAPATH')
-DB_STRING = os.getenv('PYTHON_DB_STRING')
+DB_STRING = os.getenv('INITIAL_DB_STRING')
 
 
 db = create_engine(DB_STRING)  # Starting connection with northwind db
@@ -20,9 +20,11 @@ def get_tables_data(table_names: List[str], paths: List[str]) -> str:
         try:
             cursor = connection.connection.cursor()
             for table_name, path in zip(table_names, paths):
-                save_file = open(f'{path}/{table_name}.csv', 'w', encoding='utf8')
+                save_file = open(
+                        f'{path}/{table_name}.csv', 'w', encoding='utf8')
                 copy_query = f'COPY {table_name} TO STDOUT CSV HEADER'
                 result = cursor.copy_expert(copy_query, save_file)
+                print(f'Content of {table_name} successfully saved!')
         except:
             raise
 
@@ -38,7 +40,7 @@ def get_table_names() -> List[str]:
 def create_directories(parent_path: str, table_names: List[str], date: str) \
         -> List[str]:  # Create new directory inside /data/csv
     directory_paths: List[str] = list()
-    for table_name in table_names: 
+    for table_name in table_names:
         try:
             full_path: str = os.path.join(parent_path, table_name, date)
             directory_paths.append(full_path)
@@ -69,4 +71,3 @@ if __name__ == "__main__":
     table_names: List[str] = get_table_names()
     save_paths: List[str] = create_directories(DATAPATH, table_names, DATE)
     get_tables_data(table_names, save_paths)
-

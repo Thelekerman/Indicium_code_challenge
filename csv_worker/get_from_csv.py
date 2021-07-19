@@ -43,7 +43,7 @@ def check_date(date: str) -> str:  # Check for past date env variable
 
 
 def save_data(data: str, path: str) -> None:
-    f: TextIO = open(f'{path}/saved_order_details.csv', 'w')
+    f: TextIO = open(f'{path}/order_details.csv', 'w')
     f.write(data)
     f.close()
 
