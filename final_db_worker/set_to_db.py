@@ -20,9 +20,13 @@ inspector = inspect(db)  # Setting inspector to retrieve tables infos
 def extract_data() -> None:
     with db.connect() as connection:
         cursor = connection.connection.cursor()
-        f: TextIO = open('/extracted_data/orders_with_details.csv', 'w', encoding='utf8')
-        extract_query: str = 'SELECT * FROM orders as o, order_details as od WHERE o.order_id = od.order_id'
-        print('Extracting data to file')
+        f: TextIO = open(
+                '/extracted_data/orders_with_details.csv',
+                'w',
+                encoding='utf8')
+        extract_query: str = 'SELECT * FROM orders as o, \
+order_details as od WHERE o.order_id = od.order_id'
+        print('Extracting data to file...')
         copy_query = f'COPY ({extract_query}) TO STDOUT CSV HEADER'
         result = cursor.copy_expert(copy_query, f)
         connection.connection.commit()
@@ -67,7 +71,8 @@ def set_tables_data(paths: List[str], table_names: List[str]) -> str:
             cursor = connection.connection.cursor()
             for table_name, path in zip(table_names, paths):
                 saved_file = open(path, 'r', encoding='utf8')
-                copy_query = f"COPY {table_name} FROM STDIN CSV HEADER DELIMITER ','"
+                copy_query = f"COPY {table_name} FROM STDIN CSV \
+HEADER DELIMITER ','"
                 print(f'Copying data from {path} to table {table_name}...')
                 result = cursor.copy_expert(copy_query, saved_file)
                 connection.connection.commit()
@@ -89,13 +94,16 @@ def check_files(files: List[str], tables: List[str]) -> bool:
     tables.sort()
     files.sort()
     if len(files) == len(tables):
-            return True
+        return True
     else:
         splitted_files: List[str] = list()
         for file_ in files:
-            splitted_files.append(file_.split('/')[-1].rstrip('csv').rstrip('.'))
-        missing_files:List[str] = list(set(tables) - set(splitted_files))
-        print(f'There are missing .csv files in the /data directory. Please make sure that you have executed successfully the first part of the pipeline.\nMissing files:\n  {missing_files}')
+            splitted_files.append(file_.split('/')[-1].
+                                  rstrip('csv').rstrip('.'))
+        missing_files: List[str] = list(set(tables) - set(splitted_files))
+        print(f'There are missing .csv files in the /data directory. \
+Please make sure that you have executed successfully the first part of \
+the pipeline.\nMissing files:\n  {missing_files}')
         return False
 
 
@@ -120,15 +128,13 @@ def check_date(date: str) -> str:  # Check for past date env variable
 
     return date
 
+
 if __name__ == "__main__":
     DATE: str = check_date(DATE)
     table_names: List[str] = get_table_names()
     paths: List[str] = get_file_paths(DATAPATH, DATE)
-    if check_files(paths, table_names):
-        
-        print('funcionou')
-    else:
-        print('Nao rolou')
+    if not check_files(paths, table_names):
+        sys.exit(1)
     drop_constraints()
     delete_data()
     set_tables_data(paths, table_names)

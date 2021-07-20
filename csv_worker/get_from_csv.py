@@ -21,7 +21,7 @@ def create_directory(parent_path: str, directory_name: str) -> str:  \
     full_path: str = os.path.join(parent_path, directory_name)
     try:
         os.mkdir(full_path)
-        print('Diretorio criado com sucesso!')
+        print('Directory seccessfully created!')
     except FileExistsError:
         pass
 
@@ -43,8 +43,10 @@ def check_date(date: str) -> str:  # Check for past date env variable
 
 
 def save_data(data: str, path: str) -> None:
+    print('Saving data to file...')
     f: TextIO = open(f'{path}/order_details.csv', 'w')
     f.write(data)
+    print('Data saved to file...')
     f.close()
 
 
