@@ -17,6 +17,22 @@ db = create_engine(DB_STRING)  # Starting connection with northwind db
 inspector = inspect(db)  # Setting inspector to retrieve tables infos
 
 
+def drop_constraints() -> None:
+    with db.connect() as connection:
+        cursor = connection.connection.cursor()
+        f: TextIO = open('./drop_constraints.sql')
+        cursor.execute(f.read())
+        connection.connection.commit()
+
+
+def add_constraints() -> None:
+    with db.connect() as connection:
+        cursor = connection.connection.cursor()
+        f: TextIO = open('./add_constraints.sql')
+        cursor.execute(f.read())
+        connection.connection.commit()
+
+
 def set_tables_data(paths: List[str], table_names: List[str]) -> str:
     paths.sort()
     table_names.sort()
@@ -24,10 +40,11 @@ def set_tables_data(paths: List[str], table_names: List[str]) -> str:
         try:
             cursor = connection.connection.cursor()
             for table_name, path in zip(table_names, paths):
-                connection.execute('ALTER TABLE ')
                 saved_file = open(path, 'r', encoding='utf8')
-                copy_query = f'COPY {table_name} FROM STDIN CSV HEADER'
+                copy_query = f"COPY {table_name} FROM STDIN CSV HEADER DELIMITER ','"
+                print(copy_query, path)
                 result = cursor.copy_expert(copy_query, saved_file)
+                connection.connection.commit()
         except:
             raise
 
@@ -85,5 +102,6 @@ if __name__ == "__main__":
         print('funcionou')
     else:
         print('Nao rolou')
+    drop_constraints()
     set_tables_data(paths, table_names)
-
+    add_constraints()

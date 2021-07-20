@@ -29,6 +29,8 @@ services:
         volumes:
             - ./final_dbdata:/var/lib/postgresql/data
             - ./final_db/northwind_final_db.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./final_db/drop_constraints.sql:/scripts/drop_constraints.sql
+            - ./final_db/add_constraints.sql:/scripts/add_constraints.sql
         networks:
             - final_db_network
 
