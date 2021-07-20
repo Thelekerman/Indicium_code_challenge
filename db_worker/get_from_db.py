@@ -24,6 +24,7 @@ def get_tables_data(table_names: List[str], paths: List[str]) -> str:
                         f'{path}/{table_name}.csv', 'w', encoding='utf8')
                 copy_query = f'COPY {table_name} TO STDOUT CSV HEADER'
                 result = cursor.copy_expert(copy_query, save_file)
+                connection.connection.commit()
                 print(f'Content of {table_name} successfully saved!')
         except:
             raise

@@ -17,20 +17,46 @@ db = create_engine(DB_STRING)  # Starting connection with northwind db
 inspector = inspect(db)  # Setting inspector to retrieve tables infos
 
 
+def extract_data() -> None:
+    with db.connect() as connection:
+        cursor = connection.connection.cursor()
+        f: TextIO = open('/extracted_data/orders_with_details.csv', 'w', encoding='utf8')
+        extract_query: str = 'SELECT * FROM orders as o, order_details as od WHERE o.order_id = od.order_id'
+        print('Extracting data to file')
+        copy_query = f'COPY ({extract_query}) TO STDOUT CSV HEADER'
+        result = cursor.copy_expert(copy_query, f)
+        connection.connection.commit()
+        print('Data successfully extracted!')
+
+
+def delete_data() -> None:
+    with db.connect() as connection:
+        cursor = connection.connection.cursor()
+        f: TextIO = open('./delete_data.sql', 'r', encoding='utf8')
+        print('Cleaning data...')
+        cursor.execute(f.read())
+        connection.connection.commit()
+        print('Data successfully cleaned!')
+
+
 def drop_constraints() -> None:
     with db.connect() as connection:
         cursor = connection.connection.cursor()
         f: TextIO = open('./drop_constraints.sql')
+        print('Dropping constraints...')
         cursor.execute(f.read())
         connection.connection.commit()
+        print('Constraints successfully dropped!')
 
 
 def add_constraints() -> None:
     with db.connect() as connection:
         cursor = connection.connection.cursor()
         f: TextIO = open('./add_constraints.sql')
+        print('Adding constraints...')
         cursor.execute(f.read())
         connection.connection.commit()
+        print('Constraints successfully added!')
 
 
 def set_tables_data(paths: List[str], table_names: List[str]) -> str:
@@ -42,11 +68,12 @@ def set_tables_data(paths: List[str], table_names: List[str]) -> str:
             for table_name, path in zip(table_names, paths):
                 saved_file = open(path, 'r', encoding='utf8')
                 copy_query = f"COPY {table_name} FROM STDIN CSV HEADER DELIMITER ','"
-                print(copy_query, path)
+                print(f'Copying data from {path} to table {table_name}...')
                 result = cursor.copy_expert(copy_query, saved_file)
                 connection.connection.commit()
         except:
             raise
+    print('Data successfully copied!')
 
 
 def get_file_paths(path: str, date: str) -> List[str]:
@@ -103,5 +130,7 @@ if __name__ == "__main__":
     else:
         print('Nao rolou')
     drop_constraints()
+    delete_data()
     set_tables_data(paths, table_names)
     add_constraints()
+    extract_data()

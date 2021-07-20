@@ -66,6 +66,7 @@ services:
         container_name: final_db_worker_1
         image: python:3.9
         volumes:
+            - ./extracted_data:/extracted_data
             - ./data/postgres:/data
             - ./data/csv:/data/order_details
             - ./final_db_worker:/final_db_worker
